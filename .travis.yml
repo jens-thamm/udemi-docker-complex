@@ -1,0 +1,39 @@
+language: generic 
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t jensthamm/udemi-docker-complex-client-test -f Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true jensthamm/udemi-docker-complex-client-test npm run test
+
+after_success:
+  - docker build -t jensthamm/udemi-docker-complex-client ./client
+  - docker build -t jensthamm/udemi-docker-complex-nginx  ./nginx
+  - docker build -t jensthamm/udemi-docker-complex-server ./server
+  - docker build -t jensthamm/udemi-docker-complex-worker ./worker
+  # log in to docker CLI
+  - echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+  # push images to docker hub
+  - docker push jensthamm/udemi-docker-complex-client 
+  - docker push jensthamm/udemi-docker-complex-nginx  
+  - docker push jensthamm/udemi-docker-complex-server 
+  - docker push jensthamm/udemi-docker-complex-worker 
+
+
+
+
+
+#deploy:
+#  provider: elasticbeanstalk
+#  region: "us-east-2"
+#  app: "udemi-docker-complex"
+#  env: "DockerReact-env"
+#  bucket_name: "elasticbeanstalk-us-east-2-051214511894"
+#  bucket_path: "udemi-docker-complex"
+#  on:
+#    branch: master
+#  access_key_id: $AWS_ACCESS_KEY
+#  secret_access_key: $AWS_SECRET_KEY
